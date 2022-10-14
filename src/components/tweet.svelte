@@ -32,7 +32,7 @@
 			</div>
 
 			<div class="actions">
-				<form action="/home/like" method="post">
+				<form action="?/like" method="post">
 					<input type="hidden" name="id" value={tweet.id} />
 					<button
 						class="btn like"

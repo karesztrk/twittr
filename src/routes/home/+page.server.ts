@@ -84,5 +84,74 @@ export const actions: Actions = {
 			status: 303,
 			headers: { location: '/home' }
 		};
+	},
+	like: async ({ request }) => {
+		const data = await request.formData();
+		const tweetId = data.get('id');
+		if (!tweetId) {
+			return {
+				status: 400
+			};
+		}
+
+		const id = +tweetId;
+		const liked = await prisma.liked.count({
+			where: { tweetId: id }
+		});
+
+		if (liked === 1) {
+			await prisma.liked.delete({ where: { tweetId: id } });
+
+			const count = await prisma.tweet.findUnique({
+				where: { id },
+				select: { likes: true }
+			});
+
+			if (count === null) {
+				return {
+					status: 500
+				};
+			}
+
+			await prisma.tweet.update({
+				where: { id },
+				data: { likes: (count.likes -= 1) }
+			});
+
+			return {
+				status: 303,
+				headers: {
+					location: '/home'
+				}
+			};
+		}
+
+		await prisma.liked.create({
+			data: {
+				tweetId: id,
+				user: { connect: { id: 1 } }
+			}
+		});
+
+		const count = await prisma.tweet.findUnique({
+			where: { id },
+			select: { likes: true }
+		});
+
+		if (count === null) {
+			return {
+				status: 500
+			};
+		}
+
+		await prisma.tweet.update({
+			where: { id },
+			data: { likes: (count.likes += 1) }
+		});
+
+		return {
+			status: 303,
+			headers: { location: '/home' }
+		};
 	}
 };
