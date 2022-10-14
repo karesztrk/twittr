@@ -1,7 +1,7 @@
 import prisma from '$root/lib/prisma';
 import type { TweetType } from '$root/types';
 import { timePosted } from '$root/utils/date';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad<{ tweets: TweetType[] }> = async () => {
 	// get the tweets and the user data (Prisma 😍)
@@ -17,7 +17,7 @@ export const load: PageServerLoad<{ tweets: TweetType[] }> = async () => {
 	});
 
 	// we just want an array of the ids
-	const likedTweets = Object.keys(liked).map((key) => liked[key].tweetId);
+	const likedTweets = liked.map(({ tweetId }) => tweetId);
 
 	// we can shape the data however we want
 	// so our user doesn't have to pay the cost for it
@@ -40,4 +40,49 @@ export const load: PageServerLoad<{ tweets: TweetType[] }> = async () => {
 	}
 
 	return { tweets };
+};
+
+export const actions: Actions = {
+	tweet: async ({ request }) => {
+		const data = await request.formData();
+		const tweet = String(data.get('tweet'));
+
+		// you should probably use a validation library
+		if (tweet.length > 140) {
+			return {
+				status: 400,
+				body: 'Maximum Tweet length exceeded.',
+				headers: { location: '/home' }
+			};
+		}
+
+		// the user id is hardcoded but you can get it from a session
+		await prisma.tweet.create({
+			data: {
+				posted: new Date(),
+				url: Math.random().toString(16).slice(2),
+				content: tweet,
+				likes: 0,
+				user: { connect: { id: 1 } }
+			}
+		});
+
+		return {};
+	},
+	delete: async ({ request }) => {
+		const data = await request.formData();
+		const tweetId = data.get('id');
+		if (!tweetId) {
+			return {
+				status: 400
+			};
+		}
+
+		await prisma.tweet.delete({ where: { id: +tweetId } });
+
+		return {
+			status: 303,
+			headers: { location: '/home' }
+		};
+	}
 };
