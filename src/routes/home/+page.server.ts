@@ -1,6 +1,7 @@
 import prisma from '$root/lib/prisma';
 import type { TweetType } from '$root/types';
 import { timePosted } from '$root/utils/date';
+import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad<{ tweets: TweetType[] }> = async () => {
@@ -36,7 +37,7 @@ export const load: PageServerLoad<{ tweets: TweetType[] }> = async () => {
 	});
 
 	if (!tweets) {
-		return { tweets: [] };
+		throw error(404, 'Not found');
 	}
 
 	return { tweets };
