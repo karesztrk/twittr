@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Tweet from '$root/components/tweet.svelte'
-
 	import type { PageData } from './$types';
+
   export let data: PageData;
 
 	export let profile = data.profile;
