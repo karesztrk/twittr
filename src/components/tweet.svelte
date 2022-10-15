@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition'
+	import { enhance } from '$root/lib/form'
 
 	import Icon from '$root/components/icon.svelte'
 	import type { TweetType } from '$root/types'
@@ -32,7 +33,7 @@
 			</div>
 
 			<div class="actions">
-				<form action="?/like" method="post">
+				<form action="?/like" method="post" use:enhance>
 					<input type="hidden" name="id" value={tweet.id} />
 					<button
 						class="btn like"
@@ -72,7 +73,7 @@
 					</div>
 				</a>
 
-				<form action="?/delete" method="post">
+				<form action="?/delete" method="post" use:enhance>
 					<input type="hidden" name="id" value={tweet.id} />
 					<button
 						aria-label="Remove tweet"

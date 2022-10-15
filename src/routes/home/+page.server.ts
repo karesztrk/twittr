@@ -1,7 +1,7 @@
 import prisma from '$root/lib/prisma';
 import type { TweetType } from '$root/types';
 import { timePosted } from '$root/utils/date';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad<{ tweets: TweetType[] }> = async () => {
@@ -50,11 +50,7 @@ export const actions: Actions = {
 
 		// you should probably use a validation library
 		if (tweet.length > 140) {
-			return {
-				status: 400,
-				body: 'Maximum Tweet length exceeded.',
-				headers: { location: '/home' }
-			};
+			throw redirect(400, '/home');
 		}
 
 		// the user id is hardcoded but you can get it from a session
@@ -68,31 +64,24 @@ export const actions: Actions = {
 			}
 		});
 
-		return {};
+		throw redirect(303, '/home');
 	},
 	delete: async ({ request }) => {
 		const data = await request.formData();
 		const tweetId = data.get('id');
 		if (!tweetId) {
-			return {
-				status: 400
-			};
+			throw redirect(400, '/home');
 		}
 
 		await prisma.tweet.delete({ where: { id: +tweetId } });
 
-		return {
-			status: 303,
-			headers: { location: '/home' }
-		};
+		throw redirect(303, '/home');
 	},
 	like: async ({ request }) => {
 		const data = await request.formData();
 		const tweetId = data.get('id');
 		if (!tweetId) {
-			return {
-				status: 400
-			};
+			throw redirect(400, '/home');
 		}
 
 		const id = +tweetId;
@@ -109,9 +98,7 @@ export const actions: Actions = {
 			});
 
 			if (count === null) {
-				return {
-					status: 500
-				};
+				throw error(500, 'Server error');
 			}
 
 			await prisma.tweet.update({
@@ -119,12 +106,7 @@ export const actions: Actions = {
 				data: { likes: (count.likes -= 1) }
 			});
 
-			return {
-				status: 303,
-				headers: {
-					location: '/home'
-				}
-			};
+			throw redirect(303, '/home');
 		}
 
 		await prisma.liked.create({
@@ -140,9 +122,7 @@ export const actions: Actions = {
 		});
 
 		if (count === null) {
-			return {
-				status: 500
-			};
+			throw error(500, 'Server error');
 		}
 
 		await prisma.tweet.update({
@@ -150,9 +130,6 @@ export const actions: Actions = {
 			data: { likes: (count.likes += 1) }
 		});
 
-		return {
-			status: 303,
-			headers: { location: '/home' }
-		};
+		throw redirect(303, '/home');
 	}
 };

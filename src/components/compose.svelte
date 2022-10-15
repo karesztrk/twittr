@@ -1,13 +1,16 @@
 <script lang="ts">
+	import { enhance } from '$root/lib/form'
+
 	let tweet = ''
 	let maxCharacters = 140
 
 	$: charactersLeft = maxCharacters - tweet.length
+
 </script>
 
 <div class="compose">
 	<img src="/profile/matia/avatar.webp" alt="Avatar" />
-	<form action="?/tweet" method="post" autocomplete="off">
+	<form action="?/tweet" method="post" autocomplete="off" use:enhance={{ result: ({ form }) => form.reset() }}>
 		<input
 			aria-label="Enter your Tweet"
 			bind:value={tweet}
